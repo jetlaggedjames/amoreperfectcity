@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AmorePerfectCity</title>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.18.0/mapbox-gl.css" rel="stylesheet" />
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="light">
+
+<!-- Animated looping title card -->
+<div id="title-card">
+  <h1>AmorePerfectCity</h1>
+  <p>Live NYC Election Map</p>
+</div>
+
+<!-- Light/Dark mode toggle -->
+<div id="mode-toggle">🌙</div>
+
+<!-- Map container -->
+<div id="map"></div>
+
+<!-- Live badge -->
+<div class="live-badge"><div class="pulse"></div>LIVE</div>
+
+<!-- Info card -->
+<div class="info-card" id="info">Waiting for updates...</div>
+
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.18.0/mapbox-gl.js"></script>
+<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+<script src="map.js"></script>
+</body>
+</html>
