@@ -1,34 +1,48 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AmorePerfectCity</title>
-<link href="https://api.mapbox.com/mapbox-gl-js/v2.18.0/mapbox-gl.css" rel="stylesheet" />
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>a more perfect city — live subway map (Manhattan)</title>
+
+  <!-- Leaflet (lightweight) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+
+  <link rel="stylesheet" href="style.css" />
+  <script src="script.js" defer></script>
 </head>
-<body class="light">
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>a more perfect <span class="highlight">city</span></h1>
+      <p class="subtitle">Manhattan • Live subway stops & arrivals</p>
+    </div>
+    <div class="credits">Data: MTA + NY Open Data</div>
+  </header>
 
-<!-- Animated looping title card -->
-<div id="title-card">
-  <h1>AmorePerfectCity</h1>
-  <p>Live NYC Election Map</p>
-</div>
+  <div id="app">
+    <div id="map"></div>
 
-<!-- Light/Dark mode toggle -->
-<div id="mode-toggle">🌙</div>
+    <aside id="panel" class="panel hidden">
+      <button id="closePanel" class="close">✕</button>
+      <div class="station-header">
+        <h2 id="stationName">Station</h2>
+        <div id="stationLines" class="station-lines"></div>
+      </div>
 
-<!-- Map container -->
-<div id="map"></div>
+      <div id="splitFlap" class="split-flap">
+        <!-- split flap rows will be injected here -->
+      </div>
 
-<!-- Live badge -->
-<div class="live-badge"><div class="pulse"></div>LIVE</div>
+      <div class="meta">
+        <small id="lastUpdated">updated: —</small>
+      </div>
+    </aside>
+  </div>
 
-<!-- Info card -->
-<div class="info-card" id="info">Waiting for updates...</div>
-
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.18.0/mapbox-gl.js"></script>
-<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
-<script src="map.js"></script>
+  <footer class="footer">
+    <div>© <span id="year"></span> A More Perfect City</div>
+  </footer>
 </body>
 </html>
