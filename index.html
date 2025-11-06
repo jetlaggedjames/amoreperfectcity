@@ -1,48 +1,598 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>a more perfect city — live subway map (Manhattan)</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coming Soon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
-  <!-- Leaflet (lightweight) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+        .flap-wrapper {
+            perspective: 1000px;
+        }
 
-  <link rel="stylesheet" href="style.css" />
-  <script src="script.js" defer></script>
+        .flap {
+            position: relative;
+            width: 1em;
+            height: 1.5em;
+            transform-style: preserve-3d;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .flap-half {
+            position: absolute;
+            width: 100%;
+            height: 50%;
+            left: 0;
+            overflow: hidden;
+            backface-visibility: hidden;
+            background: linear-gradient(to bottom, #3a3a3a, #303030);
+            color: #f1f5f9; 
+            border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: center;
+            font-weight: 500;
+            border-radius: 0.1em;
+            line-height: 1.5em;
+        }
+
+        .flap-half span {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            height: 200%;
+        }
+
+        .flap-top {
+            top: 0;
+            transform-origin: bottom center;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            align-items: flex-start;
+        }
+        
+        .flap-top span {
+            top: 0;
+        }
+        
+        .flap-bottom {
+            bottom: 0;
+            align-items: flex-end;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .flap-bottom span {
+            bottom: 0;
+        }
+
+        .flap-back-bottom {
+            bottom: 0;
+            transform: rotateX(180deg);
+            align-items: flex-end;
+        }
+        
+        .flap-back-bottom span {
+            bottom: 0;
+        }
+
+        .flap-back-top {
+            top: 0;
+            transform: rotateX(-180deg);
+            display: none;
+        }
+        
+        .flap.flipping .flap-top {
+            animation: flip-top 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .flap.flipping .flap-back-bottom {
+            animation: flip-back-bottom 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes flip-top {
+            0% { transform: rotateX(0deg); }
+            100% { transform: rotateX(-90deg); }
+        }
+
+        @keyframes flip-back-bottom {
+            0% { transform: rotateX(180deg); }
+            100% { transform: rotateX(0deg); }
+        }
+
+        #background-svg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+        }
+
+        .support-arm {
+            position: absolute;
+            width: 8px;
+            background: linear-gradient(to right, #71717a, #52525b);
+            box-shadow: inset -2px 0 4px rgba(0,0,0,0.3), 2px 0 8px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            transform-origin: top center;
+        }
+
+        .support-arm-left {
+            height: 180px;
+            top: -180px;
+            left: 15%;
+        }
+
+        .support-arm-right {
+            height: 180px;
+            top: -180px;
+            right: 15%;
+        }
+
+        .ceiling-mount {
+            position: absolute;
+            width: 24px;
+            height: 12px;
+            background: linear-gradient(to bottom, #52525b, #3f3f46);
+            border-radius: 4px 4px 0 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .ceiling-mount-left {
+            top: -192px;
+            left: calc(15% - 8px);
+        }
+
+        .ceiling-mount-right {
+            top: -192px;
+            right: calc(15% - 8px);
+        }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(0.5deg); }
+        }
+
+        .board-container {
+            animation: sway 4s ease-in-out infinite;
+        }
+    </style>
 </head>
-<body>
-  <header class="topbar">
-    <div class="brand">
-      <h1>a more perfect <span class="highlight">city</span></h1>
-      <p class="subtitle">Manhattan • Live subway stops & arrivals</p>
+<body class="bg-white overflow-hidden">
+
+    <svg id="background-svg" viewBox="0 0 1200 500" preserveAspectRatio="xMidYMid slice">
+        <defs>
+            <linearGradient id="sky-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#87ceeb; stop-opacity:1" />
+                <stop offset="50%" style="stop-color:#b0d4e3; stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#e0f2f7; stop-opacity:1" />
+            </linearGradient>
+            <filter id="shadow">
+                <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+            </filter>
+            <linearGradient id="tree-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#10b981; stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#059669; stop-opacity:1" />
+            </linearGradient>
+        </defs>
+
+        <rect width="1200" height="500" fill="url(#sky-gradient)" />
+
+        <!-- Iconic NYC skyline with recognizable shapes -->
+        <g fill="#4b5563" opacity="0.75">
+            <!-- Empire State Building inspired -->
+            <rect x="280" y="80" width="40" height="280" rx="2"/>
+            <rect x="285" y="60" width="30" height="20" rx="1"/>
+            <rect x="290" y="45" width="20" height="15" rx="1"/>
+            <polygon points="300,35 295,45 305,45" fill="#6b7280"/>
+            
+            <!-- Chrysler Building inspired -->
+            <rect x="380" y="120" width="35" height="240" rx="2"/>
+            <polygon points="397.5,90 380,120 415,120" fill="#6b7280"/>
+            <rect x="390" y="100" width="15" height="20" fill="#52525b"/>
+            
+            <!-- Various skyscrapers -->
+            <rect x="180" y="160" width="50" height="200" rx="2"/>
+            <rect x="240" y="180" width="30" height="180" rx="2"/>
+            <rect x="330" y="200" width="40" height="160" rx="2"/>
+            <rect x="425" y="140" width="55" height="220" rx="2"/>
+            <rect x="490" y="170" width="45" height="190" rx="2"/>
+            <rect x="545" y="150" width="60" height="210" rx="2"/>
+            <rect x="615" y="185" width="40" height="175" rx="2"/>
+            <rect x="665" y="165" width="50" height="195" rx="2"/>
+            <rect x="725" y="145" width="55" height="215" rx="2"/>
+            <rect x="790" y="175" width="45" height="185" rx="2"/>
+            <rect x="845" y="190" width="50" height="170" rx="2"/>
+            <rect x="905" y="155" width="60" height="205" rx="2"/>
+            
+            <!-- One World Trade inspired -->
+            <rect x="120" y="100" width="50" height="260" rx="2"/>
+            <polygon points="145,85 120,100 170,100" fill="#6b7280"/>
+            
+            <!-- Window details for depth -->
+            <g fill="#94a3b8" opacity="0.3">
+                <rect x="130" y="120" width="6" height="8" rx="1"/>
+                <rect x="140" y="120" width="6" height="8" rx="1"/>
+                <rect x="150" y="120" width="6" height="8" rx="1"/>
+                <rect x="130" y="135" width="6" height="8" rx="1"/>
+                <rect x="140" y="135" width="6" height="8" rx="1"/>
+                <rect x="150" y="135" width="6" height="8" rx="1"/>
+            </g>
+        </g>
+
+        <!-- Central Park trees in foreground -->
+        <g>
+            <!-- Tree 1 -->
+            <rect x="50" y="330" width="12" height="50" fill="#8b4513" rx="2"/>
+            <ellipse cx="56" cy="315" rx="35" ry="30" fill="url(#tree-gradient)"/>
+            <ellipse cx="48" cy="325" rx="28" ry="25" fill="url(#tree-gradient)"/>
+            <ellipse cx="64" cy="325" rx="28" ry="25" fill="url(#tree-gradient)"/>
+            
+            <!-- Tree 2 -->
+            <rect x="950" y="320" width="14" height="60" fill="#8b4513" rx="2"/>
+            <ellipse cx="957" cy="305" rx="40" ry="35" fill="url(#tree-gradient)"/>
+            <ellipse cx="947" cy="318" rx="32" ry="28" fill="url(#tree-gradient)"/>
+            <ellipse cx="967" cy="318" rx="32" ry="28" fill="url(#tree-gradient)"/>
+            
+            <!-- Tree 3 -->
+            <rect x="1050" y="335" width="10" height="45" fill="#8b4513" rx="2"/>
+            <ellipse cx="1055" cy="322" rx="30" ry="28" fill="url(#tree-gradient)"/>
+            <ellipse cx="1047" cy="332" rx="24" ry="22" fill="url(#tree-gradient)"/>
+            <ellipse cx="1063" cy="332" rx="24" ry="22" fill="url(#tree-gradient)"/>
+            
+            <!-- Tree 4 (smaller, background) -->
+            <rect x="20" y="345" width="8" height="35" fill="#8b4513" rx="1"/>
+            <ellipse cx="24" cy="335" rx="22" ry="20" fill="#10b981" opacity="0.8"/>
+            
+            <!-- Tree 5 (smaller, background) -->
+            <rect x="1100" y="340" width="9" height="40" fill="#8b4513" rx="1"/>
+            <ellipse cx="1104.5" cy="328" rx="25" ry="23" fill="#10b981" opacity="0.8"/>
+        </g>
+
+        <!-- Park ground/grass -->
+        <rect y="380" width="1200" height="120" fill="#86efac" opacity="0.6"/>
+        <rect y="380" width="1200" height="20" fill="#22c55e" opacity="0.4"/>
+
+        <!-- Yellow taxi -->
+        <g filter="url(#shadow)">
+            <rect x="200" y="365" width="40" height="18" rx="2" fill="#fbbf24"/>
+            <rect x="205" y="368" width="8" height="8" rx="1" fill="#60a5fa"/>
+            <rect x="227" y="368" width="8" height="8" rx="1" fill="#60a5fa"/>
+            <circle cx="210" cy="383" r="4" fill="#1f2937"/>
+            <circle cx="230" cy="383" r="4" fill="#1f2937"/>
+            <rect x="215" y="360" width="10" height="3" rx="1" fill="#fbbf24"/>
+            <animateTransform attributeName="transform"
+                              type="translate"
+                              from="-100 0"
+                              to="1300 0"
+                              dur="25s"
+                              repeatCount="indefinite" />
+        </g>
+
+        <!-- Airplane -->
+        <g filter="url(#shadow)">
+            <path d="M 0,-2 L 10,-2 L 12,0 L 10,2 L 0,2 L 2,0 Z" fill="#64748b"/>
+            <ellipse cx="2" cy="0" rx="3" ry="1.5" fill="#64748b"/>
+            <rect x="3" y="-3" width="2" height="1" fill="#64748b"/>
+            <rect x="3" y="2" width="2" height="1" fill="#64748b"/>
+            <animateTransform attributeName="transform"
+                              type="translate"
+                              from="-50 80"
+                              to="1250 60"
+                              dur="22s"
+                              repeatCount="indefinite" />
+        </g>
+        
+        <!-- Clouds -->
+        <g fill="#ffffff" opacity="0.8">
+            <g>
+                <ellipse cx="150" cy="60" rx="35" ry="18"/>
+                <ellipse cx="175" cy="65" rx="30" ry="15"/>
+                <ellipse cx="130" cy="68" rx="25" ry="12"/>
+                <animateTransform attributeName="transform"
+                                  type="translate"
+                                  from="0 0"
+                                  to="1300 0"
+                                  dur="70s"
+                                  repeatCount="indefinite" />
+            </g>
+            <g>
+                <ellipse cx="500" cy="90" rx="40" ry="20"/>
+                <ellipse cx="528" cy="95" rx="33" ry="16"/>
+                <ellipse cx="475" cy="98" rx="28" ry="14"/>
+                <animateTransform attributeName="transform"
+                                  type="translate"
+                                  from="0 0"
+                                  to="1300 0"
+                                  dur="90s"
+                                  repeatCount="indefinite" />
+            </g>
+            <g>
+                <ellipse cx="850" cy="50" rx="38" ry="19"/>
+                <ellipse cx="876" cy="55" rx="31" ry="15"/>
+                <ellipse cx="828" cy="58" rx="26" ry="13"/>
+                <animateTransform attributeName="transform"
+                                  type="translate"
+                                  from="0 0"
+                                  to="1300 0"
+                                  dur="80s"
+                                  repeatCount="indefinite" />
+            </g>
+        </g>
+        
+        <!-- Birds -->
+        <g fill="#1f2937" opacity="0.6">
+            <path d="M 0,0 Q -3,-2 -6,0 Q -3,1 0,0 Z"/>
+            <path d="M 0,0 Q 3,-2 6,0 Q 3,1 0,0 Z"/>
+            <animateTransform attributeName="transform"
+                              type="translate"
+                              from="200 100"
+                              to="1000 120"
+                              dur="35s"
+                              repeatCount="indefinite" />
+        </g>
+    </svg>
+
+    <div class="h-screen w-screen flex items-center justify-center p-4">
+        
+        <div class="board-container relative">
+            <!-- Support arms and ceiling mounts -->
+            <div class="ceiling-mount ceiling-mount-left"></div>
+            <div class="ceiling-mount ceiling-mount-right"></div>
+            <div class="support-arm support-arm-left"></div>
+            <div class="support-arm support-arm-right"></div>
+            
+            <div id="departure-board" class="bg-neutral-800 rounded-lg shadow-2xl p-4 sm:p-6 transition-transform duration-1000 ease-in-out relative" style="transform: translateY(-120%)">
+                <div class="bg-neutral-900 rounded p-4 shadow-inner">
+                    
+                    <div id="line-1" class="flex justify-center space-x-1 text-4xl sm:text-5xl md:text-6xl">
+                    </div>
+                    
+                    <div id="line-2" class="flex justify-center space-x-1 text-2xl sm:text-3xl md:text-4xl mt-4">
+                    </div>
+                    
+                    <div class="h-px bg-neutral-700 my-4 sm:my-6"></div>
+                    
+                    <div id="line-3" class="flex justify-center space-x-1 text-3xl sm:text-4xl md:text-5xl">
+                    </div>
+                    <div class="flex justify-center space-x-1 text-neutral-400 text-xs sm:text-sm tracking-widest mt-2">
+                        <div class="text-center" style="width: 2em;">DAYS</div>
+                        <div class="w-2"></div> <div class="text-center" style="width: 2em;">HRS</div>
+                        <div class="w-2"></div> <div class="text-center" style="width: 2em;">MIN</div>
+                        <div class="w-2"></div> <div class="text-center" style="width: 2em;">SEC</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="credits">Data: MTA + NY Open Data</div>
-  </header>
 
-  <div id="app">
-    <div id="map"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let flapSound;
+            
+            async function initSound() {
+                await Tone.start();
+                flapSound = new Tone.NoiseSynth({
+                    noise: { type: 'pink' },
+                    envelope: {
+                        attack: 0.001,
+                        decay: 0.08,
+                        sustain: 0,
+                        release: 0.08
+                    }
+                }).toDestination();
+                console.log("Audio ready.");
+            }
+            
+            initSound().catch(e => console.warn("Audio context could not be started:", e));
 
-    <aside id="panel" class="panel hidden">
-      <button id="closePanel" class="close">✕</button>
-      <div class="station-header">
-        <h2 id="stationName">Station</h2>
-        <div id="stationLines" class="station-lines"></div>
-      </div>
+            const targetDate = new Date('2025-12-01T00:00:00-05:00').getTime();
 
-      <div id="splitFlap" class="split-flap">
-        <!-- split flap rows will be injected here -->
-      </div>
+            const line1 = document.getElementById('line-1');
+            const line2 = document.getElementById('line-2');
+            const line3 = document.getElementById('line-3');
+            const board = document.getElementById('departure-board');
+            const backgroundSvg = document.getElementById('background-svg');
 
-      <div class="meta">
-        <small id="lastUpdated">updated: —</small>
-      </div>
-    </aside>
-  </div>
+            const alphabet = ' abcdefghijklmnopqrstuvwxyz0123456789.,:!?-';
+            
+            function createFlap(container, char = ' ') {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'flap-wrapper';
+                
+                const flap = document.createElement('div');
+                flap.className = 'flap';
+                
+                flap.innerHTML = `
+                    <div class="flap-half flap-top"><span>${char}</span></div>
+                    <div class="flap-half flap-bottom"><span>${char}</span></div>
+                    <div class="flap-half flap-back-bottom"><span>${char}</span></div>
+                    <div class="flap-half flap-back-top"><span>${char}</span></div>
+                `;
+                
+                wrapper.appendChild(flap);
+                container.appendChild(wrapper);
+                return flap;
+            }
 
-  <footer class="footer">
-    <div>© <span id="year"></span> A More Perfect City</div>
-  </footer>
+            function createSpacer(container, char) {
+                const spacer = document.createElement('div');
+                spacer.className = 'text-neutral-100 flex items-center justify-center';
+                spacer.style.height = '1.5em'; 
+                spacer.style.width = '0.5em';
+                spacer.innerHTML = `<span>${char}</span>`;
+                container.appendChild(spacer);
+            }
+
+            function setFlap(flap, newChar) {
+                const top = flap.querySelector('.flap-top');
+                const bottom = flap.querySelector('.flap-bottom');
+                const backBottom = flap.querySelector('.flap-back-bottom');
+
+                const oldChar = top.querySelector('span').textContent;
+                
+                if (oldChar.toLowerCase() === newChar.toLowerCase()) {
+                    return;
+                }
+
+                top.querySelector('span').textContent = oldChar;
+                bottom.querySelector('span').textContent = oldChar;
+                backBottom.querySelector('span').textContent = newChar;
+
+                if (flapSound && Tone.context.state === 'running') {
+                    const now = Tone.now();
+                    flapSound.triggerAttack(now + (Math.random() * 0.02));
+                }
+
+                flap.classList.add('flipping');
+
+                flap.addEventListener('animationend', () => {
+                    top.querySelector('span').textContent = newChar;
+                    bottom.querySelector('span').textContent = newChar;
+                    flap.classList.remove('flipping');
+                }, { once: true });
+            }
+            
+            async function setLineText(container, flaps, text, charMap) {
+                return new Promise(resolve => {
+                    let textChars = text.padEnd(flaps.length, ' ').split('');
+                    let flapIndex = 0;
+                    let charIndex = 0;
+                    
+                    const interval = setInterval(() => {
+                        if (flapIndex >= flaps.length) {
+                            clearInterval(interval);
+                            resolve();
+                            return;
+                        }
+
+                        const isSpacer = charMap[charIndex]; 
+                        
+                        if (isSpacer) {
+                            charIndex++; 
+                        }
+
+                        const flap = flaps[flapIndex];
+                        const char = textChars[charIndex];
+                        
+                        if(flap && char !== undefined) {
+                            setFlap(flap, char);
+                            flapIndex++;
+                            charIndex++;
+                        } else {
+                            clearInterval(interval);
+                            resolve();
+                        }
+                    }, 50);
+                });
+            }
+
+            function calculateTimeLeft() {
+                const now = new Date().getTime();
+                const difference = targetDate - now;
+
+                let days = Math.floor(difference / (1000 * 60 * 60 * 24));
+                let hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                let minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+                let seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+                if (difference < 0) {
+                    return "00:00:00:00";
+                }
+
+                const sDays = String(days).padStart(2, '0');
+                const sHours = String(hours).padStart(2, '0');
+                const sMins = String(minutes).padStart(2, '0');
+                const sSecs = String(seconds).padStart(2, '0');
+
+                return `${sDays}:${sHours}:${sMins}:${sSecs}`;
+            }
+
+            const line1Text = "amoreperfectcity.com";
+            const line2Text = "coming soon";
+            const line3Text = "00:00:00:00";
+
+            let line1Flaps = [];
+            let line2Flaps = [];
+            let line3Flaps = [];
+            
+            let line1CharMap = {};
+            let line2CharMap = {};
+            let line3CharMap = {};
+
+            line1Text.split('').forEach((char, i) => {
+                if (char === '.') {
+                    createSpacer(line1, '.');
+                    line1CharMap[i] = true;
+                } else {
+                    line1Flaps.push(createFlap(line1, ' '));
+                    line1CharMap[i] = false;
+                }
+            });
+
+            line2Text.split('').forEach((char, i) => {
+                line2Flaps.push(createFlap(line2, ' '));
+                line2CharMap[i] = false;
+            });
+            
+            line3Text.split('').forEach((char, i) => {
+                if (char === ':') {
+                    createSpacer(line3, ':');
+                    line3CharMap[i] = true;
+                } else {
+                    line3Flaps.push(createFlap(line3, '0'));
+                    line3CharMap[i] = false;
+                }
+            });
+
+            async function runSequence() {
+                backgroundSvg.style.opacity = '0.65'; 
+                
+                await new Promise(r => setTimeout(r, 1000));
+                board.style.transform = 'translateY(0)';
+
+                await new Promise(r => setTimeout(r, 1200));
+
+                await setLineText(line1, line1Flaps, line1Text, line1CharMap);
+                
+                await new Promise(r => setTimeout(r, 500));
+
+                await setLineText(line2, line2Flaps, line2Text, line2CharMap);
+
+                await new Promise(r => setTimeout(r, 500));
+
+                let lastTime = "";
+                let initialTime = calculateTimeLeft();
+                lastTime = initialTime;
+                await setLineText(line3, line3Flaps, initialTime, line3CharMap);
+                
+                setInterval(async () => {
+                    let newTime = calculateTimeLeft();
+                    
+                    if (newTime !== lastTime) {
+                        await setLineText(line3, line3Flaps, newTime, line3CharMap);
+                        lastTime = newTime;
+                    }
+                }, 1000);
+            }
+
+            runSequence();
+        });
+    </script>
 </body>
 </html>
