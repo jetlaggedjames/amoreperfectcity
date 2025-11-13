@@ -3,600 +3,992 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>moreperfectspelling</title>
     
-    <title>amoreperfectcity</title>
-
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
-</head>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Chakra+Petch:wght@500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-yellow': '#f59e0b', // amber-500
+                        'brand-accent': '#d97706', // amber-600
+                        'brand-dark': '#451a03',   // amber-950
+                        'brand-light': '#fef9c3',   // yellow-100 (bg)
+                        'brand-text': '#1f2937',   // gray-800
+                        'gold': '#ffd700',
+                        'silver': '#c0c0c0',
+                        'bronze': '#cd7f32',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['"Chakra Petch"', 'monospace'],
+                    },
+                    keyframes: {
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-10px)' },
+                            '20%, 40%, 60%, 80%': { transform: 'translateX(10px)' },
+                        },
+                        pulse: {
+                            '0%, 100%': { transform: 'scale(1)', opacity: '1' },
+                            '50%': { transform: 'scale(1.05)', opacity: '1' },
+                        },
+                        pop: {
+                            '0%': { transform: 'scale(0.5)', opacity: '0' },
+                            '80%': { transform: 'scale(1.1)', opacity: '1' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                        slideInFromTop: {
+                            '0%': { transform: 'translateY(-30px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        slideInFromBottom: {
+                            '0%': { transform: 'translateY(30px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        slideInFromLeft: {
+                            '0%': { transform: 'translateX(-30px)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' },
+                        },
+                        slideInFromRight: {
+                            '0%': { transform: 'translateX(30px)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' },
+                        }
+                    },
+                    animation: {
+                        shake: 'shake 0.6s ease-in-out',
+                        pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        pop: 'pop 0.3s ease-out',
+                        slideInTop: 'slideInFromTop 0.5s ease-out forwards',
+                        slideInBottom: 'slideInFromBottom 0.5s ease-out forwards',
+                        slideInLeft: 'slideInFromLeft 0.5s ease-out forwards',
+                        slideInRight: 'slideInFromRight 0.5s ease-out forwards',
+                    }
+                }
+            }
+        }
+    </script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
-        
         body {
-            font-family: 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            font-family: 'sans', sans-serif;
+            text-transform: lowercase;
+            color: #1f2937; /* brand-text */
+            background-color: #fef9c3; /* brand-light */
+            background-image:
+                linear-gradient(rgba(245, 158, 11, 0.1) 1px, transparent 1px),
+                linear-gradient(60deg, rgba(245, 158, 11, 0.1) 1px, transparent 1px),
+                linear-gradient(120deg, rgba(245, 158, 11, 0.1) 1px, transparent 1px);
+            background-size: 2em 3.5em;
         }
 
-        .flap-wrapper {
-            perspective: 1000px;
+        .level-button.active {
+            background-color: #f59e0b; /* brand-yellow */
+            color: #451a03; /* brand-dark */
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-
-        .flap {
-            position: relative;
-            width: 1em;
-            height: 1.5em;
-            transform-style: preserve-3d;
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .flap-half {
-            position: absolute;
-            width: 100%;
-            height: 50%;
-            left: 0;
-            overflow: hidden;
-            backface-visibility: hidden;
-            background: linear-gradient(to bottom, #3a3a3a, #303030);
-            color: #f1f5f9; 
-            border-bottom: 1px solid rgba(0, 0, 0, 0.3);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            justify-content: center;
-            font-weight: 500;
-            border-radius: 0.1em;
-            line-height: 1.5em;
-        }
-
-        .flap-half span {
-            position: absolute;
-            width: 100%;
+        
+        .countdown-box {
+            background: #1f2937; /* gray-800 */
+            color: #fef9c3; /* brand-light */
+            border-radius: 0.375rem; /* rounded-md */
+            padding: 0.5rem;
+            width: 4rem;
             text-align: center;
-            height: 200%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .countdown-box div:first-child {
+            font-family: 'Chakra Petch', monospace;
+            font-size: 1.875rem; /* text-3xl */
+            font-weight: 700;
+            line-height: 1;
+            border-bottom: 1px solid rgba(254, 249, 195, 0.2);
+            padding-bottom: 0.25rem;
+            margin-bottom: 0.25rem;
         }
 
-        .flap-top {
-            top: 0;
-            transform-origin: bottom center;
-            border-bottom-left-radius: 0;
-            border-bottom-right-radius: 0;
-            align-items: flex-start;
+        #speak-button {
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            background-color: #f59e0b; /* brand-yellow */
+            border-radius: 0; /* remove default rounding */
+            transition: all 0.2s ease-out;
+        }
+        #speak-button:hover {
+            background-color: #d97706; /* brand-accent */
+            transform: scale(1.05);
+        }
+        #speak-button:active {
+            transform: scale(0.95);
         }
         
-        .flap-top span {
-            top: 0;
+        .main-card {
+            background: #ffffff;
+            border-width: 4px;
+            border-color: #f59e0b; /* brand-yellow */
         }
         
-        .flap-bottom {
-            bottom: 0;
-            align-items: flex-end;
-            border-top-left-radius: 0;
-            border-top-right-radius: 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        .stats-modal-card {
+             background: rgba(255, 255, 255, 0.9);
+             backdrop-filter: blur(15px);
+             -webkit-backdrop-filter: blur(15px);
+             border: 2px solid #f59e0b;
         }
         
-        .flap-bottom span {
-            bottom: 0;
+        .leaderboard-item:not(:last-child) {
+            border-bottom: 1px solid #e5e7eb;
         }
-
-        .flap-back-bottom {
-            bottom: 0;
-            transform: rotateX(180deg);
-            align-items: flex-end;
-        }
-        
-        .flap-back-bottom span {
-            bottom: 0;
-        }
-
-        .flap-back-top {
-            top: 0;
-            transform: rotateX(-180deg);
-            display: none;
+        .leaderboard-item.current-user {
+            background: #fef9c3; /* brand-light */
+            border-left: 4px solid #f59e0b; /* brand-yellow */
+            padding-left: 0.75rem; /* pl-3 */
         }
         
-        .flap.flipping .flap-top {
-            animation: flip-top 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-
-        .flap.flipping .flap-back-bottom {
-            animation: flip-back-bottom 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-
-        @keyframes flip-top {
-            0% { transform: rotateX(0deg); }
-            100% { transform: rotateX(-90deg); }
-        }
-
-        @keyframes flip-back-bottom {
-            0% { transform: rotateX(180deg); }
-            100% { transform: rotateX(0deg); }
-        }
-
-        #background-svg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
+        .animate-slideInTop, .animate-slideInBottom, .animate-slideInLeft, .animate-slideInRight {
             opacity: 0;
-            transition: opacity 1.5s ease-in-out;
         }
 
-        .support-arm {
-            position: absolute;
-            width: 8px;
-            background: linear-gradient(to right, #71717a, #52525b);
-            box-shadow: inset -2px 0 4px rgba(0,0,0,0.3), 2px 0 8px rgba(0,0,0,0.2);
-            border-radius: 4px;
-            transform-origin: top center;
+        /* Styles for new login screen */
+        .login-input {
+            border: 2px solid #f59e0b;
+            background: #fff;
+            color: #451a03;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            transition: all 0.2s;
         }
-
-        .support-arm-left {
-            height: 180px;
-            top: -180px;
-            left: 15%;
+        .login-input::placeholder {
+            color: #d97706;
+            opacity: 0.7;
         }
-
-        .support-arm-right {
-            height: 180px;
-            top: -180px;
-            right: 15%;
-        }
-
-        .ceiling-mount {
-            position: absolute;
-            width: 24px;
-            height: 12px;
-            background: linear-gradient(to bottom, #52525b, #3f3f46);
-            border-radius: 4px 4px 0 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .ceiling-mount-left {
-            top: -192px;
-            left: calc(15% - 8px);
-        }
-
-        .ceiling-mount-right {
-            top: -192px;
-            right: calc(15% - 8px);
-        }
-
-        @keyframes sway {
-            0%, 100% { transform: rotate(0deg); }
-            50% { transform: rotate(0.5deg); }
-        }
-
-        .board-container {
-            animation: sway 4s ease-in-out infinite;
+        .login-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.4);
         }
     </style>
 </head>
-<body class="bg-white overflow-hidden">
+<body class="bg-brand-light w-full min-h-screen flex flex-col items-center justify-center p-4 relative">
 
-    <svg id="background-svg" viewBox="0 0 1200 500" preserveAspectRatio="xMidYMid slice">
-        <defs>
-            <linearGradient id="sky-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style="stop-color:#87ceeb; stop-opacity:1" />
-                <stop offset="50%" style="stop-color:#b0d4e3; stop-opacity:1" />
-                <stop offset="100%" style="stop-color:#e0f2f7; stop-opacity:1" />
-            </linearGradient>
-            <filter id="shadow">
-                <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
-            </filter>
-            <linearGradient id="tree-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style="stop-color:#10b981; stop-opacity:1" />
-                <stop offset="100%" style="stop-color:#059669; stop-opacity:1" />
-            </linearGradient>
-        </defs>
+    <!-- 
+      SCREEN 1: New Login Screen
+      Password-protected universal login.
+    -->
+    <div id="login-screen" class="main-card w-full max-w-sm p-6 sm:p-8 rounded-3xl shadow-xl my-8 animate-pop">
+        <h1 class="text-3xl font-bold text-brand-yellow text-center mb-6">
+            moreperfectspelling
+        </h1>
+        <div class="space-y-4">
+            <input type="text" id="login-username" class="login-input lowercase" placeholder="enter a username...">
+            <input type="password" id="login-password" class="login-input lowercase" placeholder="enter the password...">
+            <button id="login-button" class="w-full bg-brand-yellow text-brand-dark py-3 rounded-lg font-bold text-lg shadow-md hover:bg-brand-accent transition-all focus:outline-none focus:ring-2 focus:ring-brand-yellow focus:ring-opacity-50 active:scale-95">
+                login / sign up
+            </button>
+            <p id="login-error" class="text-center text-red-600 text-sm h-4"></p>
+        </div>
+    </div>
 
-        <rect width="1200" height="500" fill="url(#sky-gradient)" />
 
-        <!-- Iconic NYC skyline with recognizable shapes -->
-        <g fill="#4b5563" opacity="0.75">
-            <!-- Empire State Building inspired -->
-            <rect x="280" y="80" width="40" height="280" rx="2"/>
-            <rect x="285" y="60" width="30" height="20" rx="1"/>
-            <rect x="290" y="45" width="20" height="15" rx="1"/>
-            <polygon points="300,35 295,45 305,45" fill="#6b7280"/>
-            
-            <!-- Chrysler Building inspired -->
-            <rect x="380" y="120" width="35" height="240" rx="2"/>
-            <polygon points="397.5,90 380,120 415,120" fill="#6b7280"/>
-            <rect x="390" y="100" width="15" height="20" fill="#52525b"/>
-            
-            <!-- Various skyscrapers -->
-            <rect x="180" y="160" width="50" height="200" rx="2"/>
-            <rect x="240" y="180" width="30" height="180" rx="2"/>
-            <rect x="330" y="200" width="40" height="160" rx="2"/>
-            <rect x="425" y="140" width="55" height="220" rx="2"/>
-            <rect x="490" y="170" width="45" height="190" rx="2"/>
-            <rect x="545" y="150" width="60" height="210" rx="2"/>
-            <rect x="615" y="185" width="40" height="175" rx="2"/>
-            <rect x="665" y="165" width="50" height="195" rx="2"/>
-            <rect x="725" y="145" width="55" height="215" rx="2"/>
-            <rect x="790" y="175" width="45" height="185" rx="2"/>
-            <rect x="845" y="190" width="50" height="170" rx="2"/>
-            <rect x="905" y="155" width="60" height="205" rx="2"/>
-            
-            <!-- One World Trade inspired -->
-            <rect x="120" y="100" width="50" height="260" rx="2"/>
-            <polygon points="145,85 120,100 170,100" fill="#6b7280"/>
-            
-            <!-- Window details for depth -->
-            <g fill="#94a3b8" opacity="0.3">
-                <rect x="130" y="120" width="6" height="8" rx="1"/>
-                <rect x="140" y="120" width="6" height="8" rx="1"/>
-                <rect x="150" y="120" width="6" height="8" rx="1"/>
-                <rect x="130" y="135" width="6" height="8" rx="1"/>
-                <rect x="140" y="135" width="6" height="8" rx="1"/>
-                <rect x="150" y="135" width="6" height="8" rx="1"/>
-            </g>
-        </g>
-
-        <!-- Central Park trees in foreground -->
-        <g>
-            <!-- Tree 1 -->
-            <rect x="50" y="330" width="12" height="50" fill="#8b4513" rx="2"/>
-            <ellipse cx="56" cy="315" rx="35" ry="30" fill="url(#tree-gradient)"/>
-            <ellipse cx="48" cy="325" rx="28" ry="25" fill="url(#tree-gradient)"/>
-            <ellipse cx="64" cy="325" rx="28" ry="25" fill="url(#tree-gradient)"/>
-            
-            <!-- Tree 2 -->
-            <rect x="950" y="320" width="14" height="60" fill="#8b4513" rx="2"/>
-            <ellipse cx="957" cy="305" rx="40" ry="35" fill="url(#tree-gradient)"/>
-            <ellipse cx="947" cy="318" rx="32" ry="28" fill="url(#tree-gradient)"/>
-            <ellipse cx="967" cy="318" rx="32" ry="28" fill="url(#tree-gradient)"/>
-            
-            <!-- Tree 3 -->
-            <rect x="1050" y="335" width="10" height="45" fill="#8b4513" rx="2"/>
-            <ellipse cx="1055" cy="322" rx="30" ry="28" fill="url(#tree-gradient)"/>
-            <ellipse cx="1047" cy="332" rx="24" ry="22" fill="url(#tree-gradient)"/>
-            <ellipse cx="1063" cy="332" rx="24" ry="22" fill="url(#tree-gradient)"/>
-            
-            <!-- Tree 4 (smaller, background) -->
-            <rect x="20" y="345" width="8" height="35" fill="#8b4513" rx="1"/>
-            <ellipse cx="24" cy="335" rx="22" ry="20" fill="#10b981" opacity="0.8"/>
-            
-            <!-- Tree 5 (smaller, background) -->
-            <rect x="1100" y="340" width="9" height="40" fill="#8b4513" rx="1"/>
-            <ellipse cx="1104.5" cy="328" rx="25" ry="23" fill="#10b981" opacity="0.8"/>
-        </g>
-
-        <!-- Park ground/grass -->
-        <rect y="380" width="1200" height="120" fill="#86efac" opacity="0.6"/>
-        <rect y="380" width="1200" height="20" fill="#22c55e" opacity="0.4"/>
-
-        <!-- Yellow taxi -->
-        <g filter="url(#shadow)">
-            <rect x="200" y="365" width="40" height="18" rx="2" fill="#fbbf24"/>
-            <rect x="205" y="368" width="8" height="8" rx="1" fill="#60a5fa"/>
-            <rect x="227" y="368" width="8" height="8" rx="1" fill="#60a5fa"/>
-            <circle cx="210" cy="383" r="4" fill="#1f2937"/>
-            <circle cx="230" cy="383" r="4" fill="#1f2937"/>
-            <rect x="215" y="360" width="10" height="3" rx="1" fill="#fbbf24"/>
-            <animateTransform attributeName="transform"
-                              type="translate"
-                              from="-100 0"
-                              to="1300 0"
-                              dur="25s"
-                              repeatCount="indefinite" />
-        </g>
-
-        <!-- Airplane -->
-        <g filter="url(#shadow)">
-            <path d="M 0,-2 L 10,-2 L 12,0 L 10,2 L 0,2 L 2,0 Z" fill="#64748b"/>
-            <ellipse cx="2" cy="0" rx="3" ry="1.5" fill="#64748b"/>
-            <rect x="3" y="-3" width="2" height="1" fill="#64748b"/>
-            <rect x="3" y="2" width="2" height="1" fill="#64748b"/>
-            <animateTransform attributeName="transform"
-                              type="translate"
-                              from="-50 80"
-                              to="1250 60"
-                              dur="22s"
-                              repeatCount="indefinite" />
-        </g>
+    <!-- 
+      SCREEN 2: Main App Card
+      Now hidden by default, shown after login.
+    -->
+    <div id="app-container" class="main-card w-full max-w-md p-6 sm:p-8 rounded-3xl shadow-xl my-8 hidden">
         
-        <!-- Clouds -->
-        <g fill="#ffffff" opacity="0.8">
-            <g>
-                <ellipse cx="150" cy="60" rx="35" ry="18"/>
-                <ellipse cx="175" cy="65" rx="30" ry="15"/>
-                <ellipse cx="130" cy="68" rx="25" ry="12"/>
-                <animateTransform attributeName="transform"
-                                  type="translate"
-                                  from="0 0"
-                                  to="1300 0"
-                                  dur="70s"
-                                  repeatCount="indefinite" />
-            </g>
-            <g>
-                <ellipse cx="500" cy="90" rx="40" ry="20"/>
-                <ellipse cx="528" cy="95" rx="33" ry="16"/>
-                <ellipse cx="475" cy="98" rx="28" ry="14"/>
-                <animateTransform attributeName="transform"
-                                  type="translate"
-                                  from="0 0"
-                                  to="1300 0"
-                                  dur="90s"
-                                  repeatCount="indefinite" />
-            </g>
-            <g>
-                <ellipse cx="850" cy="50" rx="38" ry="19"/>
-                <ellipse cx="876" cy="55" rx="31" ry="15"/>
-                <ellipse cx="828" cy="58" rx="26" ry="13"/>
-                <animateTransform attributeName="transform"
-                                  type="translate"
-                                  from="0 0"
-                                  to="1300 0"
-                                  dur="80s"
-                                  repeatCount="indefinite" />
-            </g>
-        </g>
+        <!-- header: title + stats button -->
+        <div class="flex justify-between items-center mb-4 opacity-0 animate-slideInTop" style="animation-delay: 50ms;">
+            <h1 class="text-3xl font-bold text-brand-yellow">
+                moreperfectspelling
+            </h1>
+            <button id="stats-button" title="show stats" class="text-neutral-500 hover:text-brand-yellow transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-6M6 20v-8M18 20V4"/></svg>
+            </button>
+        </div>
         
-        <!-- Birds -->
-        <g fill="#1f2937" opacity="0.6">
-            <path d="M 0,0 Q -3,-2 -6,0 Q -3,1 0,0 Z"/>
-            <path d="M 0,0 Q 3,-2 6,0 Q 3,1 0,0 Z"/>
-            <animateTransform attributeName="transform"
-                              type="translate"
-                              from="200 100"
-                              to="1000 120"
-                              dur="35s"
-                              repeatCount="indefinite" />
-        </g>
-    </svg>
-
-    <div class="h-screen w-screen flex items-center justify-center p-4">
-        
-        <div class="board-container relative">
-            <!-- Support arms and ceiling mounts -->
-            <div class="ceiling-mount ceiling-mount-left"></div>
-            <div class="ceiling-mount ceiling-mount-right"></div>
-            <div class="support-arm support-arm-left"></div>
-            <div class="support-arm support-arm-right"></div>
-            
-            <div id="departure-board" class="bg-neutral-800 rounded-lg shadow-2xl p-4 sm:p-6 transition-transform duration-1000 ease-in-out relative" style="transform: translateY(-120%)">
-                <div class="bg-neutral-900 rounded p-4 shadow-inner">
-                    
-                    <div id="line-1" class="flex justify-center space-x-1 text-4xl sm:text-5xl md:text-6xl">
-                    </div>
-                    
-                    <div id="line-2" class="flex justify-center space-x-1 text-2xl sm:text-3xl md:text-4xl mt-4">
-                    </div>
-                    
-                    <div class="h-px bg-neutral-700 my-4 sm:my-6"></div>
-                    
-                    <div id="line-3" class="flex justify-center space-x-1 text-3xl sm:text-4xl md:text-5xl">
-                    </div>
-                    <div class="flex justify-center space-x-1 text-neutral-400 text-xs sm:text-sm tracking-widest mt-2">
-                        <div class="text-center" style="width: 2em;">DAYS</div>
-                        <div class="w-2"></div> <div class="text-center" style="width: 2em;">HRS</div>
-                        <div class="w-2"></div> <div class="text-center" style="width: 2em;">MIN</div>
-                        <div class="w-2"></div> <div class="text-center" style="width: 2em;">SEC</div>
-                    </div>
-
+        <!-- countdown timer -->
+        <div class="opacity-0 animate-slideInTop" style="animation-delay: 100ms;">
+            <div id="countdown-timer" class="flex justify-center space-x-2 my-4">
+                <div class="countdown-box">
+                    <div id="countdown-days">00</div>
+                    <div class="text-xs">days</div>
                 </div>
+                <div class="countdown-box">
+                    <div id="countdown-hours">00</div>
+                    <div class="text-xs">hours</div>
+                </div>
+                <div class="countdown-box">
+                    <div id="countdown-mins">00</div>
+                    <div class="text-xs">mins</div>
+                </div>
+                <div class="countdown-box">
+                    <div id="countdown-secs">00</div>
+                    <div class="text-xs">secs</div>
+                </div>
+            </div>
+            <p class="text-center text-xs text-brand-text/70 mt-2">
+                time until spelling day
+            </p>
+        </div>
+
+        <!-- level selector (segmented control) -->
+        <div id="level-selector" class="flex justify-center p-1 bg-neutral-200 rounded-lg my-6 opacity-0 animate-slideInLeft" style="animation-delay: 150ms;">
+            <button class="level-button flex-1 px-3 py-1 rounded-md text-sm font-medium text-neutral-700 transition-all" data-level="easy">easy</button>
+            <button class="level-button flex-1 px-3 py-1 rounded-md text-sm font-medium text-neutral-700 transition-all" data-level="medium">medium</button>
+            <button class="level-button flex-1 px-3 py-1 rounded-md text-sm font-medium text-neutral-700 transition-all" data-level="hard">hard</button>
+            <button class="level-button flex-1 px-3 py-1 rounded-md text-sm font-medium text-neutral-700 transition-all" data-level="expert">expert</button>
+        </div>
+
+        <!-- speak word button -->
+        <div class="flex justify-center my-4">
+            <button id="speak-button" class="text-white w-32 h-32 flex items-center justify-center shadow-lg focus:outline-none focus:ring-4 focus:ring-brand-yellow focus:ring-opacity-50 transition-all opacity-0" style="animation-name: pop; animation-delay: 200ms; animation-fill-mode: forwards;" title="hear the word">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- status display -->
+        <div id="status-display" class="w-full bg-neutral-100 text-brand-text font-display text-lg text-center p-3 rounded-lg min-h-[3.25rem] flex items-center justify-center opacity-0 animate-slideInBottom" style="animation-delay: 250ms;">
+            loading...
+        </div>
+
+        <!-- spelling input area -->
+        <div class="mt-4 space-y-4">
+            <input type="text" id="spelling-input" class="w-full px-4 py-3 border-2 border-neutral-300 rounded-lg text-lg text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-yellow focus:border-transparent lowercase transition-all opacity-0 animate-slideInRight" style="animation-delay: 300ms;" placeholder="type your spelling here...">
+            
+            <button id="submit-button" class="w-full bg-brand-yellow text-brand-dark py-3 rounded-lg font-bold text-lg shadow-md hover:bg-brand-accent transition-all focus:outline-none focus:ring-2 focus:ring-brand-yellow focus:ring-opacity-50 active:scale-95 opacity-0 animate-slideInRight" style="animation-delay: 350ms;">
+                check spelling
+            </button>
+            <button id="next-button" class="w-full bg-neutral-800 text-white py-3 rounded-lg font-bold text-lg shadow-md hover:bg-opacity-90 transition-all focus:outline-none focus:ring-2 focus:ring-neutral-800 focus:ring-opacity-50 active:scale-95 hidden">
+                next word
+            </button>
+        </div>
+
+        <!-- hints area -->
+        <div class="flex justify-center space-x-4 mt-6 opacity-0 animate-slideInBottom" style="animation-delay: 400ms;">
+            <button id="definition-button" class="bg-neutral-200 text-neutral-800 px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-neutral-300 transition-colors">
+                definition
+            </button>
+            <button id="sentence-button" class="bg-neutral-200 text-neutral-800 px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-neutral-300 transition-colors">
+                use in a sentence
+            </button>
+        </div>
+
+        <!-- feedback area (for hints) -->
+        <div id="feedback-area" class="text-brand-text bg-neutral-100 font-sans text-base p-3 rounded-lg mt-6 min-h-[3em] transition-all opacity-0 animate-slideInBottom" style="animation-delay: 450ms;">
+            <!-- definitions, and sentences appear here -->
+        </div>
+
+        <!-- tts warning message -->
+        <p id="tts-warning" class="text-xs text-neutral-500 text-center mt-4">
+            note: text-to-speech may not work in this preview.
+        </p>
+    </div>
+
+    <!-- 
+      SCREEN 3: stats modal (changed from screen 4)
+    -->
+    <div id="stats-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden animate-pop">
+        <div class="stats-modal-card w-full max-w-sm p-6 rounded-3xl shadow-2xl relative">
+            <button id="close-modal-button" class="absolute top-4 right-4 text-neutral-500 hover:text-brand-yellow">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            
+            <h2 class="text-2xl font-bold text-center text-brand-dark mb-4">session stats</h2>
+            
+            <div class="grid grid-cols-2 gap-4 text-center mb-6">
+                 <div>
+                    <div id="stats-correct" class="text-3xl font-bold text-brand-dark">0</div>
+                    <div class="text-sm text-neutral-600">correct</div>
+                </div>
+                <div>
+                    <div id="stats-attempted" class="text-3xl font-bold text-brand-dark">0</div>
+                    <div class="text-sm text-neutral-600">attempted</div>
+                </div>
+                 <div>
+                    <div id="stats-current-streak" class="text-3xl font-bold text-brand-dark">0</div>
+                    <div class="text-sm text-neutral-600">current streak</div>
+                </div>
+                 <div>
+                    <div id="stats-longest-streak" class="text-3xl font-bold text-brand-dark">0</div>
+                    <div class="text-sm text-neutral-600">longest streak</div>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-bold text-center text-brand-dark mb-3">leaderboard</h3>
+            <div id="leaderboard-container" class="bg-white/50 rounded-lg p-3 space-y-2 mb-6 max-h-48 overflow-y-auto">
+                <div class="text-center text-sm text-neutral-500">loading leaderboard...</div>
+            </div>
+
+            <div class="text-center">
+                <button id="share-stats-button" class="w-full bg-brand-yellow text-brand-dark py-3 rounded-lg font-bold text-lg shadow hover:bg-brand-accent transition-colors focus:outline-none focus:ring-2 focus:ring-brand-yellow focus:ring-opacity-50">
+                    share results
+                </button>
+                <p id="copy-message" class="text-sm text-neutral-600 h-4 mt-2"></p>
             </div>
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            let flapSound;
-            
-            async function initSound() {
-                await Tone.start();
-                flapSound = new Tone.NoiseSynth({
-                    noise: { type: 'pink' },
-                    envelope: {
-                        attack: 0.001,
-                        decay: 0.08,
-                        sustain: 0,
-                        release: 0.08
-                    }
-                }).toDestination();
-                console.log("Audio ready.");
-            }
-            
-            initSound().catch(e => console.warn("Audio context could not be started:", e));
+    <!-- corner links -->
+    <a href="#" class="fixed bottom-4 right-4 text-neutral-500 text-xs opacity-70 hover:opacity-100 transition-opacity">
+        november project
+    </a>
+    
+    <textarea id="share-textarea" class="absolute -left-full"></textarea>
 
-            const targetDate = new Date('2025-12-01T00:00:00-05:00').getTime();
 
-            const line1 = document.getElementById('line-1');
-            const line2 = document.getElementById('line-2');
-            const line3 = document.getElementById('line-3');
-            const board = document.getElementById('departure-board');
-            const backgroundSvg = document.getElementById('background-svg');
+    <!-- 
+      *** HOW TO FIX LEADERBOARD ***
+      To make the leaderboard work, paste your Firebase config object here.
+      
+      <script>
+        const __firebase_config = JSON.stringify({
+          apiKey: "...",
+          authDomain: "...",
+          projectId: "...",
+          storageBucket: "...",
+          messagingSenderId: "...",
+          appId: "..."
+        });
+        const __app_id = 'moreperfectspelling-app'; 
+      </script>
+    -->
+    <script type="module">
+        // --- firebase imports ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-            const alphabet = ' abcdefghijklmnopqrstuvwxyz0123456789.,:!?-';
-            
-            function createFlap(container, char = ' ') {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'flap-wrapper';
-                
-                const flap = document.createElement('div');
-                flap.className = 'flap';
-                
-                flap.innerHTML = `
-                    <div class="flap-half flap-top"><span>${char}</span></div>
-                    <div class="flap-half flap-bottom"><span>${char}</span></div>
-                    <div class="flap-half flap-back-bottom"><span>${char}</span></div>
-                    <div class="flap-half flap-back-top"><span>${char}</span></div>
-                `;
-                
-                wrapper.appendChild(flap);
-                container.appendChild(wrapper);
-                return flap;
-            }
+        // --- global app config ---
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-moreperfectspelling';
+        
+        let db, auth, usersCollection;
+        let unsubscribeUserStats = null;
+        let unsubscribeLeaderboard = null;
 
-            function createSpacer(container, char) {
-                const spacer = document.createElement('div');
-                spacer.className = 'text-neutral-100 flex items-center justify-center';
-                spacer.style.height = '1.5em'; 
-                spacer.style.width = '0.5em';
-                spacer.innerHTML = `<span>${char}</span>`;
-                container.appendChild(spacer);
-            }
+        // ---
+        // REQUEST: How to add more words
+        // Just copy the format below and add it to the correct array (easy, medium, hard, expert).
+        // The randomizer is already built-in!
+        //
+        // { 
+        //   word: "yourword", 
+        //   definition: "its definition.", 
+        //   sentence: "a sentence using _____." 
+        // },
+        // ---
+        const wordLevels = {
+            easy: [
+                { word: "house", definition: "a building for human habitation.", sentence: "they live in a small _____." },
+                { word: "friend", definition: "a person one knows and with whom one has a bond of mutual affection.", sentence: "she went to the park with her _____." },
+                { word: "happy", definition: "feeling or showing pleasure or contentment.", sentence: "the _____ dog wagged its tail." },
+                { word: "school", definition: "an institution for educating children.", sentence: "he walks to _____ every day." },
+                { word: "water", definition: "a colorless, transparent, odorless liquid.", sentence: "please drink some _____." }
+            ],
+            medium: [
+                { word: "beautiful", definition: "pleasing the senses or mind aesthetically.", sentence: "what a _____ sunset." },
+                // FIX: Corrected typo 'word:A' to 'word:'
+                { word: "bicycle", definition: "a vehicle composed of two wheels held in a frame one behind the other.", sentence: "she learned to ride a _____." },
+                { word: "kitchen", definition: "a room or area where food is prepared and cooked.", sentence: "we ate breakfast in the _____." },
+                { word: "people", definition: "human beings in general or considered collectively.", sentence: "there were many _____ at the concert." },
+                { word: "animal", definition: "a living organism that feeds on organic matter.", sentence: "a lion is a wild _____." }
+            ],
+            hard: [
+                { word: "necessary", definition: "required to be done, achieved, or present; needed; essential.", sentence: "it is _____ to study for the test." },
+                { word: "occasionally", definition: "at infrequent or irregular intervals; now and then.", sentence: "we _____ go out for dinner." },
+                { word: "committee", definition: "a group of people appointed for a specific function.", sentence: "the _____ will meet next week." },
+                { word: "government", definition: "the governing body of a nation, state, or community.", sentence: "the _____ passed a new law." },
+                { word: "successful", definition: "accomplishing an aim or purpose.", sentence: "she was _____ in her career." },
+                { word: "temperature", definition: "the degree or intensity of heat present in a substance or object.", sentence: "the _____ dropped overnight." },
+                { word: "phenomenon", definition: "a fact or situation that is observed to exist or happen.", sentence: "the aurora borealis is a natural _____." },
+                { word: "questionnaire", definition: "a set of printed or written questions with a choice of answers.", sentence: "please fill out this _____." },
+                { word: "rhythm", definition: "a strong, regular repeated pattern of movement or sound.", sentence: "the _____ of the music made her want to dance." },
+                { word: "conscientious", definition: "wishing to do one's work or duty well and thoroughly.", sentence: "she is a _____ student." },
+                { word: "liaison", definition: "communication or cooperation that facilitates a close working relationship.", sentence: "he acted as a _____ between the two departments." },
+                { word: "bureaucracy", definition: "a system of government with many complex rules and procedures.", sentence: "they got lost in the complex _____." },
+                { word: "millennium", definition: "a period of a thousand years.", sentence: "the museum celebrated the new _____." },
+                { word: "acquiesce", definition: "accept something reluctantly but without protest.", sentence: "she will _____ to his demands." },
+                { word: "camouflage", definition: "the disguising of military personnel, equipment, and installations.", sentence: "the lizard's skin provided perfect _____." },
+                { word: "colleague", definition: "a person with whom one works in a profession or business.", sentence: "he discussed the project with his _____." },
+                { word: "embarrass", definition: "cause (someone) to feel awkward, self-conscious, or ashamed.", sentence: "he tried not to _____ his friend in public." },
+                { word: "fluorescent", definition: "emitting light during absorption of radiation from an external source.", sentence: "the _____ lights buzzed overhead." },
+                { word: "guarantee", definition: "a formal promise or assurance that certain conditions will be fulfilled.", sentence: "the product comes with a two-year _____." },
+                { word: "mischievous", definition: "causing or showing a fondness for causing trouble in a playful way.", sentence: "the _____ kitten unrolled the yarn." },
+                { word: "privilege", definition: "a special right, advantage, or immunity granted or available only to a particular person or group.", sentence: "education is a _____, not a right, in some countries." },
+                { word: "separate", definition: "forming or viewed as a unit apart or by itself.", sentence: "please _____ the whites from the colors." },
+                { word: "sincerely", definition: "in a genuine way.", sentence: "i am _____ sorry for what happened." },
+                { word: "visible", definition: "able to be seen.", sentence: "the mountains were barely _____ through the fog." },
+                { word: "weird", definition: "suggesting something supernatural; uncanny.", sentence: "that's a _____ coincidence." }
+            ],
+            expert: [
+                { word: "onomatopoeia", definition: "the formation of a word from a sound associated with what is named.", sentence: "the word 'buzz' is an example of _____." },
+                { word: "idiosyncrasy", definition: "a mode of behavior or way of thought peculiar to an individual.", sentence: "his 'uhm' at the start of every sentence was an _____." },
+                { word: "anonymity", definition: "the condition of being anonymous.", sentence: "the author preferred to write with _____." },
+                { word: "serendipity", definition: "the occurrence and development of events by chance in a happy or beneficial way.", sentence: "finding the old coin was pure _____." },
+                { word: "ubiquitous", definition: "present, appearing, or found everywhere.", sentence: "smartphones are now _____." },
+                { word: "ephemeral", definition: "lasting for a very short time.", sentence: "the beauty of the blossom is _____." },
+                { word: "quintessential", definition: "representing the most perfect or typical example of a quality or class.", sentence: "he was the _____ tough guy." },
+                { word: "malicious", definition: "characterized by malice; intending or intended to do harm.", sentence: "the email contained a _____ virus." },
+                { word: "logorrhea", definition: "a tendency to extreme loquacity.", sentence: "the patient's _____ made diagnosis difficult." },
+                { word: "pneumonoultramicroscopicsilicovolcanoconiosis", definition: "a lung disease caused by inhaling very fine ash and sand dust.", sentence: "it is the longest word in the english dictionary." },
+                { word: "antidisestablishmentarianism", definition: "opposition to the disestablishment of the church of england.", sentence: "the political debate centered on _____." },
+                { word: "floccinaucinihilipilification", definition: "the action or habit of estimating something as worthless.", sentence: "i am amused by his _____ of modern art." },
+                { word: "readability", definition: "a measure of the ease with which a text can be understood.", sentence: "they improved the document's _____." },
+                { word: "sacrilegious", definition: "involving or committing sacrilege.", sentence: "it was considered a _____ act." },
+                { word: "pharaoh", definition: "a ruler in ancient egypt.", sentence: "the _____ was buried in a pyramid." },
+                { word: "chrysanthemum", definition: "a popular plant of the daisy family.", sentence: "she received a bouquet of _____." },
+                { word: "exaggerate", definition: "represent (something) as being larger, greater, better, or worse than it really is.", sentence: "he tends to _____ his accomplishments." },
+                { word: "perseverance", definition: "persistence in doing something despite difficulty or delay.", sentence: "her _____ paid off in the end." },
+                { word: "eunoia", definition: "a state of normal good health (in mind).", sentence: "the therapist wished for her patient's _____." },
+                { word: "aberration", definition: "a departure from what is normal, usual, or expected.", sentence: "the test result was a strange _____." },
+                { word: "bellwether", definition: "an indicator or predictor of trends.", sentence: "ohio is a _____ state in elections." },
+                { word: "coterie", definition: "a small group of people with shared interests or tastes.", sentence: "a _____ of artists met at the cafe." },
+                { word: "demagogue", definition: "a political leader who seeks support by appealing to popular desires.", sentence: "the speaker was a dangerous _____." },
+                { word: "ebullient", definition: "cheerful and full of energy.", sentence: "she was in an _____ mood after the good news." },
+                { word: "facetious", definition: "treating serious issues with deliberately inappropriate humor.", sentence: "it was a _____ remark, not a serious one." },
+                { word: "garrulous", definition: "excessively talkative, especially on trivial matters.", sentence: "the _____ taxi driver told us his life story." },
+                { word: "hegemony", definition: "leadership or dominance, especially by one country or social group.", sentence: "the nation sought regional _____." },
+                { word: "iconoclast", definition: "a person who attacks cherished beliefs or institutions.", sentence: "the artist was an _____, breaking all the rules." },
+                { word: "juxtaposition", definition: "the fact of two things being seen or placed close together with contrasting effect.", sentence: "the _____ of old and new architecture was striking." },
+                { word: "kakistocracy", definition: "government by the worst or least qualified citizens.", sentence: "critics described the regime as a _____." },
+                { word: "lackadaisical", definition: "lacking enthusiasm and determination; carelessly lazy.", sentence: "his _____ attitude worried his manager." },
+                { word: "narcissism", definition: "excessive interest in or admiration of oneself and one's physical appearance.", sentence: "his feed was a shrine to his own _____." },
+                { "word": "obfuscate", "definition": "render obscure, unclear, or unintelligible.", "sentence": "the politician tried to _____ the issue." },
+                { "word": "paradigm", "definition": "a typical example or pattern of something; a model.", "sentence": "this discovery shifted the scientific _____." },
+                { "word": "quixotic", "definition": "exceedingly idealistic; unrealistic and impractical.", "sentence": "it was a _____ quest to save the old theater." }
+            ]
+        };
 
-            function setFlap(flap, newChar) {
-                const top = flap.querySelector('.flap-top');
-                const bottom = flap.querySelector('.flap-bottom');
-                const backBottom = flap.querySelector('.flap-back-bottom');
-
-                const oldChar = top.querySelector('span').textContent;
-                
-                if (oldChar.toLowerCase() === newChar.toLowerCase()) {
-                    return;
-                }
-
-                top.querySelector('span').textContent = oldChar;
-                bottom.querySelector('span').textContent = oldChar;
-                backBottom.querySelector('span').textContent = newChar;
-
-                if (flapSound && Tone.context.state === 'running') {
-                    const now = Tone.now();
-                    flapSound.triggerAttack(now + (Math.random() * 0.02));
-                }
-
-                flap.classList.add('flipping');
-
-                flap.addEventListener('animationend', () => {
-                    top.querySelector('span').textContent = newChar;
-                    bottom.querySelector('span').textContent = newChar;
-                    flap.classList.remove('flipping');
-                }, { once: true });
-            }
-            
-            async function setLineText(container, flaps, text, charMap) {
-                return new Promise(resolve => {
-                    let textChars = text.padEnd(flaps.length, ' ').split('');
-                    let flapIndex = 0;
-                    let charIndex = 0;
-                    
-                    const interval = setInterval(() => {
-                        if (flapIndex >= flaps.length) {
-                            clearInterval(interval);
-                            resolve();
-                            return;
-                        }
-
-                        const isSpacer = charMap[charIndex]; 
-                        
-                        if (isSpacer) {
-                            charIndex++; 
-                        }
-
-                        const flap = flaps[flapIndex];
-                        const char = textChars[charIndex];
-                        
-                        if(flap && char !== undefined) {
-                            setFlap(flap, char);
-                            flapIndex++;
-                            charIndex++;
-                        } else {
-                            clearInterval(interval);
-                            resolve();
-                        }
-                    }, 50);
+        function processWordList() {
+            for (const level in wordLevels) {
+                wordLevels[level].forEach(wordObj => {
+                    if (!wordObj.sentence || wordObj.sentence.includes('_____')) return; 
+                    const regex = new RegExp(wordObj.word, 'gi');
+                    wordObj.sentence = wordObj.sentence.replace(regex, '_____');
                 });
             }
+        }
+        processWordList();
 
-            function calculateTimeLeft() {
-                const now = new Date().getTime();
-                const difference = targetDate - now;
+        // --- dom elements ---
+        const loginScreen = document.getElementById('login-screen');
+        const loginUsername = document.getElementById('login-username');
+        const loginPassword = document.getElementById('login-password');
+        const loginButton = document.getElementById('login-button');
+        const loginError = document.getElementById('login-error');
 
-                let days = Math.floor(difference / (1000 * 60 * 60 * 24));
-                let hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                let minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-                let seconds = Math.floor((difference % (1000 * 60)) / 1000);
+        const appContainer = document.getElementById('app-container');
+        
+        const speakButton = document.getElementById('speak-button');
+        const spellingInput = document.getElementById('spelling-input');
+        const submitButton = document.getElementById('submit-button');
+        const nextButton = document.getElementById('next-button');
+        const definitionButton = document.getElementById('definition-button');
+        const sentenceButton = document.getElementById('sentence-button');
+        const feedbackArea = document.getElementById('feedback-area');
+        const statusDisplay = document.getElementById('status-display');
+        const ttsWarning = document.getElementById('tts-warning');
+        const levelButtons = document.querySelectorAll('.level-button');
+        
+        const statsButton = document.getElementById('stats-button');
+        const statsModal = document.getElementById('stats-modal');
+        const closeModalButton = document.getElementById('close-modal-button');
+        const shareStatsButton = document.getElementById('share-stats-button');
+        const copyMessage = document.getElementById('copy-message');
+        const shareTextarea = document.getElementById('share-textarea');
+        
+        const statsCorrect = document.getElementById('stats-correct');
+        const statsAttempted = document.getElementById('stats-attempted');
+        const statsCurrentStreak = document.getElementById('stats-current-streak');
+        const statsLongestStreak = document.getElementById('stats-longest-streak');
+        
+        const leaderboardContainer = document.getElementById('leaderboard-container');
+        
+        const countdownDays = document.getElementById('countdown-days');
+        const countdownHours = document.getElementById('countdown-hours');
+        const countdownMins = document.getElementById('countdown-mins');
+        const countdownSecs = document.getElementById('countdown-secs');
 
-                if (difference < 0) {
-                    return "00:00:00:00";
+        // --- app state ---
+        let currentWord = null;
+        let lastWord = null;
+        let currentDifficulty = 'hard';
+        let speechSynthesis = window.speechSynthesis;
+        let utterance = new SpeechSynthesisUtterance();
+        
+        let currentUser = null; // Set after successful login
+        
+        let stats = {
+            score: 0,
+            attempted: 0,
+            currentStreak: 0,
+            longestStreak: 0,
+            resultsHistory: []
+        };
+
+        // --- countdown timer ---
+        const countdownTarget = new Date('2025-11-26T00:00:00-05:00');
+        let countdownInterval;
+        
+        function updateCountdown() {
+            const now = new Date();
+            const diff = countdownTarget - now;
+            
+            if (diff <= 0) {
+                countdownDays.textContent = '00';
+                countdownHours.textContent = '00';
+                countdownMins.textContent = '00';
+                countdownSecs.textContent = '00';
+                if(countdownInterval) {
+                    clearInterval(countdownInterval);
                 }
-
-                const sDays = String(days).padStart(2, '0');
-                const sHours = String(hours).padStart(2, '0');
-                const sMins = String(minutes).padStart(2, '0');
-                const sSecs = String(seconds).padStart(2, '0');
-
-                return `${sDays}:${sHours}:${sMins}:${sSecs}`;
+                return;
             }
 
-            const line1Text = "amoreperfectcity.com";
-            const line2Text = "coming soon";
-            const line3Text = "00:00:00:00";
-
-            let line1Flaps = [];
-            let line2Flaps = [];
-            let line3Flaps = [];
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const secs = Math.floor((diff % (1000 * 60)) / 1000);
             
-            let line1CharMap = {};
-            let line2CharMap = {};
-            let line3CharMap = {};
-
-            line1Text.split('').forEach((char, i) => {
-                if (char === '.') {
-                    createSpacer(line1, '.');
-                    line1CharMap[i] = true;
+            countdownDays.textContent = String(days).padStart(2, '0');
+            countdownHours.textContent = String(hours).padStart(2, '0');
+            countdownMins.textContent = String(mins).padStart(2, '0');
+            countdownSecs.textContent = String(secs).padStart(2, '0');
+        }
+        
+        // --- firebase functions ---
+        async function initFirebase() {
+            if (!firebaseConfig.apiKey) {
+                console.error("firebase config is missing!");
+                loginError.textContent = "type your name than the password, my code is broken so this doesn't matter (for now, i'll fix it)";
+                // Allow offline play
+                loginButton.addEventListener('click', handleOfflineLogin);
+                loginPassword.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') handleOfflineLogin();
+                });
+                loginUsername.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') handleOfflineLogin();
+                });
+                return;
+            }
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                usersCollection = collection(db, 'artifacts', appId, 'public', 'data', 'moreperfectspelling_users');
+                
+                const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (token) {
+                    await signInWithCustomToken(auth, token);
                 } else {
-                    line1Flaps.push(createFlap(line1, ' '));
-                    line1CharMap[i] = false;
+                    await signInAnonymously(auth);
                 }
-            });
-
-            line2Text.split('').forEach((char, i) => {
-                line2Flaps.push(createFlap(line2, ' '));
-                line2CharMap[i] = false;
-            });
-            
-            line3Text.split('').forEach((char, i) => {
-                if (char === ':') {
-                    createSpacer(line3, ':');
-                    line3CharMap[i] = true;
-                } else {
-                    line3Flaps.push(createFlap(line3, '0'));
-                    line3CharMap[i] = false;
-                }
-            });
-
-            async function runSequence() {
-                backgroundSvg.style.opacity = '0.65'; 
                 
-                await new Promise(r => setTimeout(r, 1000));
-                board.style.transform = 'translateY(0)';
-
-                await new Promise(r => setTimeout(r, 1200));
-
-                await setLineText(line1, line1Flaps, line1Text, line1CharMap);
+                // Add login listeners now that firebase is ready
+                loginButton.addEventListener('click', handleLogin);
+                loginPassword.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') handleLogin();
+                });
+                loginUsername.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') handleLogin();
+                });
                 
-                await new Promise(r => setTimeout(r, 500));
+            } catch (e) {
+                console.error("firebase init error:", e);
+                loginError.textContent = "error connecting. offline mode.";
+                // Allow offline play
+                loginButton.addEventListener('click', handleOfflineLogin);
+                loginPassword.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') handleOfflineLogin();
+                });
+                loginUsername.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') handleOfflineLogin();
+                });
+            }
+        }
+        
+        // New function to create a user if they don't exist
+        async function createNewUser(username) {
+            console.log(`creating new user: ${username}`);
+            const userDocRef = doc(usersCollection, username);
+            await setDoc(userDocRef, {
+                username: username,
+                score: 0,
+                attempted: 0,
+                currentStreak: 0,
+                longestStreak: 0,
+                resultsHistory: []
+            });
+        }
+        
+        // New function to handle login
+        async function handleLogin() {
+            const username = loginUsername.value.toLowerCase().trim();
+            const password = loginPassword.value.toLowerCase().trim();
 
-                await setLineText(line2, line2Flaps, line2Text, line2CharMap);
-
-                await new Promise(r => setTimeout(r, 500));
-
-                let lastTime = "";
-                let initialTime = calculateTimeLeft();
-                lastTime = initialTime;
-                await setLineText(line3, line3Flaps, initialTime, line3CharMap);
-                
-                setInterval(async () => {
-                    let newTime = calculateTimeLeft();
-                    
-                    if (newTime !== lastTime) {
-                        await setLineText(line3, line3Flaps, newTime, line3CharMap);
-                        lastTime = newTime;
-                    }
-                }, 1000);
+            if (!username) {
+                loginError.textContent = "please enter a username.";
+                return;
             }
 
-            runSequence();
+            if (password !== 'speller') {
+                loginError.textContent = "incorrect password.";
+                return;
+            }
+            
+            // Password is correct
+            loginError.textContent = "";
+            loginButton.disabled = true;
+            loginButton.textContent = "logging in...";
+
+            try {
+                currentUser = username;
+                const userDocRef = doc(usersCollection, currentUser);
+                const userDoc = await getDoc(userDocRef);
+
+                if (!userDoc.exists()) {
+                    await createNewUser(currentUser);
+                }
+                
+                // Now load stats and start app
+                loadUserStats(currentUser);
+                loadLeaderboard();
+                setActiveLevel(currentDifficulty); 
+
+                loginScreen.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+
+            } catch (e) {
+                console.error("Login error:", e);
+                loginError.textContent = "error logging in.";
+                loginButton.disabled = false;
+                loginButton.textContent = "login / sign up";
+            }
+        }
+
+        // New function for offline play
+        function handleOfflineLogin() {
+            const username = loginUsername.value.toLowerCase().trim();
+            if (!username) {
+                loginError.textContent = "please enter a username.";
+                return;
+            }
+            
+            currentUser = username;
+            stats.username = username; // Store for display
+            
+            // Disable firebase features
+            leaderboardContainer.innerHTML = '<div class="text-center text-sm text-neutral-500">leaderboard disabled.</div>';
+            
+            // Start app
+            setActiveLevel(currentDifficulty); 
+            loginScreen.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+        }
+
+        function loadUserStats(username) {
+            if (unsubscribeUserStats) unsubscribeUserStats();
+            if (!db) return; // Not connected
+            
+            const userDocRef = doc(usersCollection, username);
+            
+            unsubscribeUserStats = onSnapshot(userDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    stats = {
+                        username: data.username || username,
+                        score: data.score || 0,
+                        attempted: data.attempted || 0,
+                        currentStreak: data.currentStreak || 0,
+                        longestStreak: data.longestStreak || 0,
+                        resultsHistory: data.resultsHistory || []
+                    };
+                    updateStatsDisplay();
+                } else {
+                    // This can happen briefly if createNewUser hasn't finished
+                    console.log(`Waiting for user doc: ${username}`);
+                }
+            }, (error) => {
+                console.error("error listening to user stats:", error);
+            });
+        }
+        
+        function loadLeaderboard() {
+            if (unsubscribeLeaderboard) unsubscribeLeaderboard();
+            if (!db) return; // Not connected
+            
+            unsubscribeLeaderboard = onSnapshot(usersCollection, (querySnapshot) => {
+                const leaderboard = [];
+                querySnapshot.forEach((doc) => {
+                    leaderboard.push(doc.data());
+                });
+                
+                leaderboard.sort((a, b) => {
+                    if (a.score !== b.score) return b.score - a.score;
+                    return b.longestStreak - a.longestStreak;
+                });
+                
+                renderLeaderboard(leaderboard);
+            }, (error) => {
+                console.error("error listening to leaderboard:", error);
+                leaderboardContainer.innerHTML = '<div class="text-center text-sm text-neutral-500">error loading board.</div>';
+            });
+        }
+        
+        async function updateUserStats() {
+            if (!currentUser || !db) return; // Not connected
+            
+            const userDocRef = doc(usersCollection, currentUser);
+            try {
+                // We only update, never overwrite username
+                await updateDoc(userDocRef, {
+                    score: stats.score,
+                    attempted: stats.attempted,
+                    currentStreak: stats.currentStreak,
+                    longestStreak: stats.longestStreak,
+                    resultsHistory: stats.resultsHistory
+                });
+            } catch (e) {
+                console.error("error updating user stats:", e);
+            }
+        }
+        
+        // --- rendering functions ---
+        
+        function renderLeaderboard(leaderboard) {
+            leaderboardContainer.innerHTML = '';
+            
+            if (leaderboard.length === 0) {
+                 leaderboardContainer.innerHTML = '<div class="text-center text-sm text-neutral-500">no stats recorded yet.</div>';
+                 return;
+            }
+
+            leaderboard.forEach((user, index) => {
+                const isCurrentUser = user.username === currentUser;
+                const userElement = document.createElement('div');
+                
+                let rankIcon = `<span class="font-bold text-sm w-6">${index + 1}.</span>`;
+                let rankClass = '';
+                
+                if (index === 0) {
+                    rankIcon = '<span class="w-6 text-lg">👑</span>';
+                    rankClass = 'bg-gold/30 border-l-4 border-gold';
+                } else if (index === 1) {
+                    rankIcon = '<span class="w-6 text-lg">🥈</span>';
+                    rankClass = 'bg-silver/30 border-l-4 border-silver';
+                } else if (index === 2) {
+                    rankIcon = '<span class="w-6 text-lg">🥉</span>';
+                    rankClass = 'bg-bronze/30 border-l-4 border-bronze';
+                }
+
+                userElement.className = `leaderboard-item flex justify-between items-center p-2 rounded-md ${rankClass} ${isCurrentUser ? 'current-user' : ''}`;
+                
+                userElement.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        ${rankIcon}
+                        <span class="font-semibold text-brand-dark">${user.username} ${isCurrentUser ? '(you)' : ''}</span>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-brand-dark">${user.score} pts</div>
+                        <div class="text-xs text-neutral-600">streak: ${user.longestStreak}</div>
+                    </div>
+                `;
+                leaderboardContainer.appendChild(userElement);
+            });
+        }
+
+        // --- core app functions ---
+        
+        function updateStatsDisplay() {
+            statsCorrect.textContent = stats.score;
+            statsAttempted.textContent = stats.attempted;
+            statsCurrentStreak.textContent = stats.currentStreak;
+            statsLongestStreak.textContent = stats.longestStreak;
+        }
+
+        function setActiveLevel(level) {
+            currentDifficulty = level;
+            levelButtons.forEach(button => {
+                button.classList.toggle('active', button.dataset.level === level);
+            });
+            loadWord();
+        }
+
+        function loadWord() {
+            const wordList = wordLevels[currentDifficulty];
+            do {
+                currentWord = wordList[Math.floor(Math.random() * wordList.length)];
+            } while (wordList.length > 1 && currentWord.word === lastWord);
+            
+            lastWord = currentWord.word;
+            
+            spellingInput.value = '';
+            spellingInput.disabled = false;
+            spellingInput.classList.remove('border-red-500', 'border-green-500', 'animate-shake');
+            statusDisplay.textContent = 'word loaded...';
+            statusDisplay.classList.remove('text-green-500', 'text-red-500');
+            feedbackArea.textContent = 'click hints for definition or sentence.';
+            submitButton.classList.remove('hidden');
+            nextButton.classList.add('hidden');
+            
+            speakWord();
+        }
+
+        function speakWord() {
+            if (speechSynthesis && currentWord) {
+                speechSynthesis.cancel();
+                utterance.text = currentWord.word;
+                utterance.rate = 0.8;
+                utterance.pitch = 1.2;
+                speechSynthesis.speak(utterance);
+                ttsWarning.classList.add('hidden');
+            } else if (currentWord) {
+                statusDisplay.textContent = `word: "${currentWord.word}". (tts not available)`;
+                ttsWarning.classList.remove('hidden');
+            }
+        }
+
+        function showDefinition() {
+            if (currentWord) {
+                feedbackArea.textContent = currentWord.definition;
+            }
+        }
+
+        function showSentence() {
+            if (currentWord) {
+                feedbackArea.textContent = currentWord.sentence;
+            }
+        }
+
+        function checkSpelling() {
+            const userInput = spellingInput.value.toLowerCase().trim();
+            if (!userInput || !currentWord || spellingInput.disabled) {
+                return;
+            }
+            
+            spellingInput.classList.remove('animate-shake');
+            stats.attempted++;
+            
+            if (userInput === currentWord.word) {
+                // correct
+                statusDisplay.textContent = "that's correct! buzzing with success!";
+                statusDisplay.classList.add('text-green-500');
+                statusDisplay.classList.remove('text-red-500');
+                spellingInput.classList.add('border-green-500');
+                spellingInput.classList.remove('border-red-500');
+                
+                stats.score++;
+                stats.currentStreak++;
+                stats.resultsHistory.push('🟩');
+            } else {
+                // incorrect
+                statusDisplay.textContent = "not quite, try again! (or ask for a hint)";
+                statusDisplay.classList.add('text-red-500');
+                statusDisplay.classList.remove('text-green-500');
+                spellingInput.classList.add('border-red-500', 'animate-shake');
+                spellingInput.classList.remove('border-green-500');
+                
+                stats.currentStreak = 0;
+                stats.resultsHistory.push('🟥');
+            }
+            
+            if (stats.currentStreak > stats.longestStreak) {
+                stats.longestStreak = stats.currentStreak;
+            }
+            
+            if (stats.resultsHistory.length > 20) {
+                stats.resultsHistory.shift();
+            }
+            
+            spellingInput.disabled = true;
+            submitButton.classList.add('hidden');
+            nextButton.classList.remove('hidden');
+            
+            updateStatsDisplay();
+            updateUserStats(); // sync with firestore
+        }
+
+        function generateAndCopyShareText() {
+            const shortHistory = stats.resultsHistory.slice(-10).join('');
+            const shareString = `moreperfectspelling (${currentDifficulty}) 🐝
+score: ${stats.score}/${stats.attempted} | streak: ${stats.currentStreak} 🔥
+${shortHistory}`;
+
+            try {
+                shareTextarea.value = shareString;
+                shareTextarea.select();
+                document.execCommand('copy');
+                
+                copyMessage.textContent = 'copied to clipboard!';
+                setTimeout(() => { copyMessage.textContent = ''; }, 2000);
+            } catch (err) {
+                copyMessage.textContent = 'copy failed. try manually.';
+            }
+        }
+
+        // --- event listeners ---
+        
+        // App listeners (only active after login)
+        speakButton.addEventListener('click', speakWord);
+        definitionButton.addEventListener('click', showDefinition);
+        sentenceButton.addEventListener('click', showSentence);
+        submitButton.addEventListener('click', checkSpelling);
+        nextButton.addEventListener('click', loadWord);
+
+        levelButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                setActiveLevel(button.dataset.level);
+            });
         });
+
+        // modal listeners
+        statsButton.addEventListener('click', () => {
+            updateStatsDisplay();
+            statsModal.classList.remove('hidden');
+        });
+        closeModalButton.addEventListener('click', () => {
+            statsModal.classList.add('hidden');
+        });
+        shareStatsButton.addEventListener('click', generateAndCopyShareText);
+
+        // keyboard listeners
+        spellingInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                if (!submitButton.classList.contains('hidden')) {
+                    checkSpelling();
+                } else {
+                    loadWord();
+                }
+            }
+        });
+        
+        spellingInput.addEventListener('animationend', () => {
+            spellingInput.classList.remove('animate-shake');
+        });
+
+        // --- initialize app ---
+        if (!speechSynthesis) {
+            ttsWarning.classList.remove('hidden');
+        }
+        
+        // start countdown
+        updateCountdown();
+        countdownInterval = setInterval(updateCountdown, 1000);
+        
+        // connect to firebase (or set up offline mode)
+        initFirebase();
+        
+        // set default active level button visually
+        document.querySelector('.level-button[data-level="hard"]').classList.add('active');
+        
     </script>
 </body>
 </html>
